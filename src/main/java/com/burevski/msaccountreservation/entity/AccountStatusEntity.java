@@ -16,11 +16,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "account_status")
-public class AccountStatusEntity {
+public class AccountStatusEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private int id;
 
     @Column(nullable = false, unique = true, length = 50)
     private String name;

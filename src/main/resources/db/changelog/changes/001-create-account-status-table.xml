@@ -9,6 +9,12 @@
 
     <changeSet id="001-create-account-status-table" author="DannyBurevski">
 
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="account_status"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="account_status">
 
             <column name="id" type="INT" autoIncrement="true">

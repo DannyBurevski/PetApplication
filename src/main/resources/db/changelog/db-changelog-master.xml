@@ -22,5 +22,8 @@
     <include
             file="changes/004-create-account-table.xml"
             relativeToChangelogFile="true"/>
+    <include
+            file="changes/005-add-audit-columns.xml"
+            relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

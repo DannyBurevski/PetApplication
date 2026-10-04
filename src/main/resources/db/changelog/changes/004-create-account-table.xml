@@ -9,6 +9,12 @@
 
     <changeSet id="004-create-account-table" author="DannyBurevski">
 
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="account"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="account">
 
             <column

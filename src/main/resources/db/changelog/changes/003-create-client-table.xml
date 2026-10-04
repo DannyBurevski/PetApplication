@@ -9,6 +9,12 @@
 
     <changeSet id="003-create-client-table" author="DannyBurevski">
 
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="client"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="client">
 
             <column
