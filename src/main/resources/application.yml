@@ -16,7 +16,7 @@ spring:
 
 management:
   server:
-    port: 8081
+    port: ${MANAGEMENT_SERVER_PORT:8081}
   endpoints:
     web:
       exposure:
