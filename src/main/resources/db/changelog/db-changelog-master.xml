@@ -25,5 +25,14 @@
     <include
             file="changes/005-add-audit-columns.xml"
             relativeToChangelogFile="true"/>
+    <include
+            file="changes/006-add-client-status.xml"
+            relativeToChangelogFile="true"/>
+    <include
+            file="changes/007-add-client-name-fields.xml"
+            relativeToChangelogFile="true"/>
+    <include
+            file="changes/008-add-client-mdm-constraints.xml"
+            relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

@@ -1,9 +1,13 @@
 package com.burevski.msaccountreservation.entity;
 
+import com.burevski.msaccountreservation.entity.enums.ClientStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import java.util.UUID;
 
@@ -15,11 +19,22 @@ import java.util.UUID;
 public class ClientEntity extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Generated(event = EventType.INSERT)
+    @ColumnDefault("gen_random_uuid()")
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
     @Column(name = "full_name", nullable = false)
     private String fullName;
+
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
+
+    @Column(name = "middle_name", length = 100)
+    private String middleName;
 
     @Column(nullable = false, length = 100)
     private String citizenship;
@@ -37,5 +52,9 @@ public class ClientEntity extends AuditableEntity {
     private String documentType;
 
     @Column(name = "mdm_code", nullable = false)
-    private Long mdmCode;
+    private Long mdmId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private ClientStatus status = ClientStatus.ACTIVE;
 }

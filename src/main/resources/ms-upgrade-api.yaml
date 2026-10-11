@@ -1,0 +1,530 @@
+openapi: 3.0.3
+
+info:
+  title: API клиентов
+  version: 1.0.0
+  description: Создание и управление клиентами
+
+servers:
+  - url: /
+    description: Текущий сервер
+
+tags:
+  - name: Clients
+    description: Работа с клиентами
+
+paths:
+  /api/v1/clients/{clientId}/exists:
+    get:
+      tags:
+        - Clients
+      operationId: checkClientExists
+      summary: Проверка существования клиента
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Результат проверки существования клиента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientExistsResponse'
+        '400':
+          description: Некорректный формат идентификатора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/clients/{clientId}:
+    get:
+      tags:
+        - Clients
+      summary: Получить клиента по ID
+      operationId: getClientById
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Идентификатор клиента
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Клиент найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Некорректный формат идентификатора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Clients
+      summary: Обновить клиента
+      operationId: updateClient
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Идентификатор клиента
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientRequest'
+      responses:
+        '200':
+          description: Клиент обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Невалидные данные или некорректный идентификатор
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Clients
+      summary: Удалить клиента
+      operationId: deleteClient
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Идентификатор клиента
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Клиент удалён
+        '400':
+          description: Некорректный формат идентификатора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: У клиента есть активные счета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/clients:
+    get:
+      tags:
+        - Clients
+      summary: Найти клиентов с пагинацией
+      operationId: searchClients
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы, начиная с 0
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+
+        - name: size
+          in: query
+          description: Количество клиентов на странице
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+
+        - name: lastName
+          in: query
+          description: Точное совпадение фамилии без учёта регистра
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+            pattern: '.*\S.*'
+          example: Балотелли
+
+        - name: mdmId
+          in: query
+          description: Точное совпадение mdmId
+          schema:
+            type: integer
+            format: int64
+          example: 1234567891
+
+      responses:
+        '200':
+          description: Страница клиентов. Если совпадений нет, content пустой
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientPageResponse'
+        '400':
+          description: Некорректные параметры поиска
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Clients
+      summary: Создать клиента
+      operationId: createClient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClientRequest'
+      responses:
+        '201':
+          description: Клиент создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Невалидные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Клиент с таким mdmId уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  schemas:
+    ClientExistsResponse:
+      type: object
+      required:
+        - exists
+        - clientId
+        - status
+      properties:
+        exists:
+          type: boolean
+          description: Клиент существует и не удалён
+        clientId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          nullable: true
+          description: Статус клиента; null для отсутствующего или удалённого
+          enum:
+            - ACTIVE
+            - BLOCKED
+            - DELETED
+            - null
+    ClientResponse:
+      type: object
+      required:
+        - id
+        - mdmId
+        - firstName
+        - lastName
+        - status
+        - createdAt
+        - updatedAt
+        - hasAccounts
+      properties:
+        id:
+          type: string
+          format: uuid
+        mdmId:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        middleName:
+          type: string
+          maxLength: 100
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ClientStatusDto'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        hasAccounts:
+          type: boolean
+          default: false
+          description: На текущем этапе всегда false
+
+    ClientStatusDto:
+      type: string
+      enum:
+        - ACTIVE
+        - BLOCKED
+        - DELETED
+
+    ErrorResponse:
+      type: object
+      required:
+        - errorCode
+        - errorDescription
+        - statusCode
+      properties:
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        errorDescription:
+          type: string
+        statusCode:
+          type: integer
+          format: int32
+
+    ErrorCode:
+      type: string
+      enum:
+        - INVALID_REQUEST
+        - CLIENT_NOT_FOUND
+        - CLIENT_ALREADY_EXISTS
+        - CLIENT_HAS_ACTIVE_ACCOUNTS
+
+    CreateClientRequest:
+      type: object
+      required:
+        - mdmId
+        - firstName
+        - lastName
+        - citizenship
+        - clientType
+        - documentNumber
+        - documentSeries
+        - documentType
+      properties:
+        mdmId:
+          type: integer
+          format: int64
+          example: 1234567891
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
+          example: Иван
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
+          example: Петров
+        middleName:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: Сергеевич
+        citizenship:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
+          example: РФ
+        clientType:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '.*\S.*'
+          example: INDIVIDUAL
+        documentNumber:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '.*\S.*'
+          example: '123456'
+        documentSeries:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: '.*\S.*'
+          example: '1234'
+        documentType:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '.*\S.*'
+          example: PASSPORT
+    UpdateClientRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - citizenship
+        - clientType
+        - documentNumber
+        - documentSeries
+        - documentType
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
+          example: Иван
+
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
+          example: Сидоров
+
+        middleName:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Если не передано или равно null, отчество очищается
+          example: Сергеевич
+
+        citizenship:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '.*\S.*'
+          example: РФ
+
+        clientType:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '.*\S.*'
+          example: INDIVIDUAL
+
+        documentNumber:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '.*\S.*'
+          example: '123456'
+
+        documentSeries:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: '.*\S.*'
+          example: '1234'
+
+        documentType:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '.*\S.*'
+          example: PASSPORT
+    ClientListItem:
+      type: object
+      required:
+        - id
+        - mdmId
+        - firstName
+        - lastName
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        mdmId:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        middleName:
+          type: string
+          maxLength: 100
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ClientStatusDto'
+
+    PageMetadata:
+      type: object
+      required:
+        - pageNumber
+        - pageSize
+        - totalPages
+        - totalElements
+      properties:
+        pageNumber:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Номер текущей страницы, начиная с 0
+        pageSize:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Запрошенный размер страницы
+        totalPages:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Общее количество страниц
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Общее количество клиентов, подходящих под фильтры
+
+    ClientPageResponse:
+      type: object
+      required:
+        - content
+        - pageable
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientListItem'
+        pageable:
+          $ref: '#/components/schemas/PageMetadata'
